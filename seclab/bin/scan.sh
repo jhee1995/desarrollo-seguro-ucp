@@ -18,12 +18,20 @@ SECLAB="$(cd "$HERE/.." && pwd)"
 GREEN=$'\033[38;5;46m'; YEL=$'\033[38;5;226m'; CYAN=$'\033[38;5;51m'
 RED=$'\033[38;5;196m'; DIM=$'\033[2m'; BOLD=$'\033[1m'; RST=$'\033[0m'
 
+<<<<<<< HEAD
 WITH_TRIVY=0; SOFT=0; ANIM=1; TARGET="."
+=======
+WITH_TRIVY=0; SOFT=0; ANIM=1; AI=0; TARGET="."
+>>>>>>> main
 for a in "$@"; do
   case "$a" in
     --with-trivy) WITH_TRIVY=1;;
     --soft) SOFT=1;;
     --no-anim) ANIM=0;;
+<<<<<<< HEAD
+=======
+    --ai) AI=1;;
+>>>>>>> main
     __run) :;;
     *) TARGET="$a";;
   esac
@@ -33,6 +41,10 @@ done
 if [ "${1:-}" = "__run" ]; then
   SCANDIR="$2"; STATE="$3"; WITH_TRIVY="$4"
   mkdir -p "$STATE"
+<<<<<<< HEAD
+=======
+  rm -f "$STATE/scan_error"
+>>>>>>> main
   DR="docker run --rm -v ${SCANDIR}:/scan -v ${STATE}:/scan/.state"
 
   echo ">> secretos (gitleaks)"
@@ -44,14 +56,36 @@ if [ "${1:-}" = "__run" ]; then
      --output=/scan/.state/semgrep.json /scan >/dev/null 2>&1 || true
 
   echo ">> SCA (osv-scanner)"
+<<<<<<< HEAD
   $DR ghcr.io/google/osv-scanner:latest --format=json \
      --output=/scan/.state/osv.json -r /scan >/dev/null 2>&1 || true
 
+=======
+  osv_neterr=0
+  osv_out="$($DR ghcr.io/google/osv-scanner:latest --format=json \
+     --output=/scan/.state/osv.json -r /scan 2>&1)"
+  # osv necesita red a osv.dev; si no la alcanza, su "0 vulns" no es fiable.
+  if printf '%s' "$osv_out" | grep -qiE "error during extraction|max retries|tls handshake|connection refused|no such host|i/o timeout"; then
+     osv_neterr=1
+  fi
+
+  trivy_ok=0
+>>>>>>> main
   if [ "$WITH_TRIVY" = "1" ]; then
     echo ">> SBOM + vulns (trivy)"
     docker run --rm -v "${SCANDIR}:/scan" -v "${STATE}:/scan/.state" \
        -v trivy-db-cache:/root/.cache/ aquasec/trivy:latest fs --quiet \
        --format=json --output=/scan/.state/trivy.json /scan >/dev/null 2>&1 || true
+<<<<<<< HEAD
+=======
+    # trivy trae su propia base (ghcr.io) -> si produjo salida, el SCA quedo cubierto.
+    [ -s "$STATE/trivy.json" ] && trivy_ok=1
+  fi
+
+  # fail-closed: el SCA solo queda SIN VERIFICAR si NINGUNA herramienta de SCA lo cubrio.
+  if [ "$osv_neterr" = "1" ] && [ "$trivy_ok" = "0" ]; then
+     echo "El SCA no pudo consultar ninguna base de vulnerabilidades (osv.dev sin acceso y sin Trivy). No se puede afirmar que las dependencias esten limpias. Reintenta con red, o corre con --with-trivy (base offline desde ghcr.io)." > "$STATE/scan_error"
+>>>>>>> main
   fi
   echo ">> escaneres terminados"
   exit 0
@@ -81,8 +115,29 @@ if [ -x "$HERE/notify.sh" ]; then
   "$HERE/notify.sh" "$STATE" "$SCANDIR" || true
 fi
 
+<<<<<<< HEAD
 # ---------------------------- gate -------------------------------------------
 echo
+=======
+# ---------------------------- triage con IA (opcional) -----------------------
+if [ "$AI" = "1" ]; then
+  echo
+  printf "${DIM}── triage con IA ──────────────────────────────────${RST}\n"
+  # carga/solicita la key de forma segura (oculta, guardada en seclab/.env)
+  . "$HERE/_ai_env.sh"
+  ai_ensure_key || true
+  python3 "$HERE/ai_triage.py" "$STATE/report.json" || true
+fi
+
+# ---------------------------- gate -------------------------------------------
+echo
+# fail-closed: un escaneo que no pudo completarse NO pasa (aunque haya 0 hallazgos)
+if [ -f "$STATE/scan_error" ]; then
+  printf "   ${RED}${BOLD}🚫 GATE: escaneo INCOMPLETO — fail-closed.${RST}  ${DIM}(exit 2)${RST}\n"
+  printf "   ${DIM}%s${RST}\n" "$(cat "$STATE/scan_error")"
+  exit 2
+fi
+>>>>>>> main
 if [ "$TOTAL" -gt 0 ]; then
   if [ "$SOFT" = "1" ]; then
     printf "   ${YEL}● %s hallazgo(s). Modo --soft: no bloquea.${RST}\n" "$TOTAL"; exit 0
