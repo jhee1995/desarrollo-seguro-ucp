@@ -58,7 +58,7 @@ def salud():
 def cabeceras(resp):
     origen = request.headers.get("Origin")
     if origen:
-        resp.headers["Access-Control-Allow-Origin"] = origin
+        resp.headers["Access-Control-Allow-Origin"] = **
         resp.headers["Access-Control-Allow-Credentials"] = "true"
     return resp
 
