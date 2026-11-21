@@ -1,0 +1,12 @@
+{
+  "name": "pinger",
+  "version": "1.0.0",
+  "description": "Servicio de diagnostico (VULNERABLE a proposito)",
+  "main": "server.js",
+  "scripts": { "start": "node server.js" },
+  "dependencies": {
+    "express": "4.17.1",
+    "lodash": "4.17.4",
+    "minimist": "1.2.0"
+  }
+}

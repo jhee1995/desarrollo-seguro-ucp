@@ -1,0 +1,7 @@
+name: lab-php-upload
+services:
+  web:
+    build: .
+    container_name: lab-php-web
+    ports:
+      - "127.0.0.1:8081:80"   # solo localhost

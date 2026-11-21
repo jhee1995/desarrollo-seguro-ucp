@@ -1,0 +1,7 @@
+name: lab-node-cmdi
+services:
+  web:
+    build: .
+    container_name: lab-node-web
+    ports:
+      - "127.0.0.1:8082:3000"   # solo localhost

