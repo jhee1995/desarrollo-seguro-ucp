@@ -201,6 +201,8 @@ docker compose logs victim | grep -iE '\$\{jndi:(ldap|rmi|dns)'
 - Impacto: ejecucion de codigo **como root** en la victima.
 - Contencion: red `internal: true` -> sin egress; no hubo exfiltracion ni 2a etapa.
 - Remediacion: actualizar a log4j 2.17.x (ver `./demo-log4shell.sh`).
+<<<<<<< HEAD
+=======
 
 ---
 
@@ -229,3 +231,4 @@ docker compose logs victim | grep "Peticion recibida" | grep 'jndi:'
 Regla: pregunta *"¿que linea prueba el vector?"* (`Peticion recibida`) y *"¿que linea
 prueba la causa?"* (`JndiLookup.lookup`). El resto de la pila (`c_lookup`, `p_lookup`,
 `GenericURLContext`...) es el camino interno de Java: contexto, no evidencia.
+>>>>>>> main

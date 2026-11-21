@@ -38,4 +38,10 @@ grep -oE '/app/[a-z_]+\.py|/usr/local/lib/python[0-9.]+|ZeroDivisionError: [a-z 
 echo "   (Ábranla en el navegador: $INS/error)"
 echo "   Segura:"; curl -s $SEG/error | sed 's/^/     /'; echo
 
+pausa "D. INYECCIÓN SQL. Buscar las facturas del cliente «ana»"
+for u in $INS $SEG; do pedir GET "$u/facturas/buscar?cliente=ana" token-ana; done
+pausa "   Ahora cliente=' OR 1=1 --   (anula el filtro y lee también las de Luis)"
+for u in $INS $SEG; do pedir GET "$u/facturas/buscar?cliente=%27%20OR%201%3D1%20--" token-ana; done
+echo "   Insegura: el texto se concatena en el SQL. Segura: consulta parametrizada."
+
 pausa "Fin. El entorno queda arriba para la demo 5 (defensa en profundidad). Para apagarlo: $DC down"
