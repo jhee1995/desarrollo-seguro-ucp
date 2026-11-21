@@ -2,6 +2,7 @@
 import json
 import logging
 import os
+import sqlite3
 import urllib.error
 import urllib.request
 
@@ -22,6 +23,18 @@ FACTURAS = {
     2: {"id": 2, "cliente_id": 2, "cliente": "luis", "total": 980000},
     3: {"id": 3, "cliente_id": 2, "cliente": "luis", "total": 45000},
 }
+
+
+def conexion_facturas():
+    """Base de datos de juguete para la búsqueda de facturas (SQLite en memoria)."""
+    con = sqlite3.connect(":memory:")
+    con.row_factory = sqlite3.Row
+    con.execute("CREATE TABLE facturas (id INTEGER PRIMARY KEY, cliente_id INTEGER, cliente TEXT, total INTEGER)")
+    con.executemany(
+        "INSERT INTO facturas VALUES (?, ?, ?, ?)",
+        [(f["id"], f["cliente_id"], f["cliente"], f["total"]) for f in FACTURAS.values()],
+    )
+    return con
 
 
 class PermisosNoDisponibles(Exception):
@@ -84,6 +97,19 @@ def ver_factura(fid):
     if factura is None or factura["cliente_id"] != g.usuario["id"]:
         abort(404)  # 404 y no 403: no revela que la factura existe
     return jsonify(factura)
+
+
+@app.get("/facturas/buscar")
+@login_requerido
+def buscar_facturas():
+    cliente = request.args.get("cliente", "")
+    con = conexion_facturas()
+    # ✅ Consulta parametrizada: el nombre viaja como dato, nunca como SQL.
+    filas = con.execute(
+        "SELECT id, cliente, total FROM facturas WHERE cliente_id = ? AND cliente = ?",
+        (g.usuario["id"], cliente),
+    ).fetchall()
+    return jsonify([dict(f) for f in filas])
 
 
 @app.post("/documentos/<int:doc_id>/editar")
