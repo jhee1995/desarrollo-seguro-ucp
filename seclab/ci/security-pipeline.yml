@@ -1,0 +1,56 @@
+# Pipeline de seguridad en CI — mismo escaneo que local (bin/scan.sh), un solo
+# motor. Secretos + SAST + SCA (+ Trivy). Bloquea el merge si hay hallazgos.
+# Copie este archivo a .github/workflows/ de su repo.
+name: security-gate
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read      # minimo privilegio
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4   # fije por SHA en produccion
+
+      - name: Escaneo de seguridad (secretos + SAST + SCA)
+        run: |
+          chmod +x seclab/bin/scan.sh seclab/bin/_parse.py seclab/bin/notify.sh
+          # --soft para no abortar antes de subir el reporte; el gate se evalua abajo
+          seclab/bin/scan.sh --no-anim --soft . || true
+
+      - name: Publicar métricas y notificar (si hay secretos configurados)
+        if: always()
+        env:
+          SECLAB_WEBHOOK_SLACK: ${{ secrets.SECLAB_WEBHOOK_SLACK }}
+          SECLAB_WEBHOOK_DISCORD: ${{ secrets.SECLAB_WEBHOOK_DISCORD }}
+          SECLAB_TELEGRAM_TOKEN: ${{ secrets.SECLAB_TELEGRAM_TOKEN }}
+          SECLAB_TELEGRAM_CHAT: ${{ secrets.SECLAB_TELEGRAM_CHAT }}
+          SECLAB_PUSHGATEWAY: ${{ secrets.SECLAB_PUSHGATEWAY }}
+        run: |
+          STATE=$(ls -d seclab/.state/*/ 2>/dev/null | head -1)
+          [ -n "$STATE" ] && seclab/bin/notify.sh "$STATE" "$PWD" || true
+
+      - name: Subir reporte como artefacto
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-report
+          path: seclab/.state/*/report.json
+          if-no-files-found: ignore
+
+      - name: Gate — bloquear si hay hallazgos
+        run: |
+          STATE=$(ls -d seclab/.state/*/ 2>/dev/null | head -1)
+          TOTAL=$(cat "${STATE}_total" 2>/dev/null || echo 0)
+          echo "Hallazgos: $TOTAL"
+          if [ "$TOTAL" -gt 0 ]; then
+            echo "::error::Security gate: $TOTAL hallazgo(s) nuevo(s) — merge bloqueado."
+            exit 1
+          fi
+          echo "Security gate: sin hallazgos — OK."

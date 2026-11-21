@@ -1,0 +1,49 @@
+{
+  "uid": "seclab-devsecops",
+  "title": "SecLab · DevSecOps en tiempo real",
+  "tags": ["seclab", "devsecops"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "5s",
+  "time": { "from": "now-30m", "to": "now" },
+  "panels": [
+    {
+      "id": 1, "type": "stat", "title": "Hallazgos totales",
+      "gridPos": { "h": 5, "w": 6, "x": 0, "y": 0 },
+      "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute",
+        "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 1 } ] } } },
+      "targets": [ { "expr": "sum(seclab_findings_total)", "refId": "A" } ]
+    },
+    {
+      "id": 2, "type": "stat", "title": "Alarmas nuevas",
+      "gridPos": { "h": 5, "w": 6, "x": 6, "y": 0 },
+      "fieldConfig": { "defaults": { "color": { "fixedColor": "red", "mode": "fixed" } } },
+      "targets": [ { "expr": "sum(seclab_findings_new)", "refId": "A" } ]
+    },
+    {
+      "id": 3, "type": "stat", "title": "Alarmas subsanadas",
+      "gridPos": { "h": 5, "w": 6, "x": 12, "y": 0 },
+      "fieldConfig": { "defaults": { "color": { "fixedColor": "green", "mode": "fixed" } } },
+      "targets": [ { "expr": "sum(seclab_findings_fixed)", "refId": "A" } ]
+    },
+    {
+      "id": 4, "type": "piechart", "title": "Hallazgos por herramienta",
+      "gridPos": { "h": 5, "w": 6, "x": 18, "y": 0 },
+      "targets": [ { "expr": "sum by (tool) (seclab_findings)", "legendFormat": "{{tool}}", "refId": "A" } ]
+    },
+    {
+      "id": 5, "type": "timeseries", "title": "Hallazgos por herramienta (tiempo)",
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 5 },
+      "targets": [ { "expr": "sum by (tool) (seclab_findings)", "legendFormat": "{{tool}}", "refId": "A" } ]
+    },
+    {
+      "id": 6, "type": "timeseries", "title": "Total vs subsanadas (tiempo)",
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 5 },
+      "targets": [
+        { "expr": "sum(seclab_findings_total)", "legendFormat": "total", "refId": "A" },
+        { "expr": "sum(seclab_findings_fixed)", "legendFormat": "subsanadas", "refId": "B" }
+      ]
+    }
+  ]
+}

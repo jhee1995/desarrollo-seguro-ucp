@@ -1,0 +1,8 @@
+# estado de escaneos (se regenera)
+.state/
+# artefactos de labs
+**/node_modules/
+**/uploads/*
+!**/uploads/.gitkeep
+*.log
+.env
